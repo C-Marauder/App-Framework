@@ -1,0 +1,3 @@
+include ':VM'
+include ':app'
+rootProject.name = "AppFramework"
