@@ -7,6 +7,7 @@ import androidx.databinding.PropertyChangeRegistry
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.xhh.framework.vm.helper.AppHelper
 import com.xhh.framework.vm.http.Resource
 import com.xhh.framework.vm.livedata.ResourceLiveData
 import kotlinx.coroutines.Dispatchers
@@ -24,7 +25,7 @@ abstract class AppViewModel(application: Application) : AndroidViewModel(applica
     @Transient
     private var mCallbacks: PropertyChangeRegistry? = null
 
-    val mMessageObserver:MutableLiveData<String> by lazy {
+    internal val mMessageObserver:MutableLiveData<String> by lazy {
         MutableLiveData<String>()
     }
 
@@ -40,14 +41,19 @@ abstract class AppViewModel(application: Application) : AndroidViewModel(applica
     init {
         addOnPropertyChangedCallback(object :Observable.OnPropertyChangedCallback(){
             override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
-                if (!service.isNullOrEmpty()){
+
+                if (!service.isNullOrEmpty() && propertyId == BR.service){
                     onCallRequest(service!!)
                 }
             }
 
         })
     }
-    fun load(service: String){
+
+    fun updateUIByEvent(event:String){
+        mMessageObserver.value = event
+    }
+    open fun load(service: String){
         this.service = service
     }
     @Suppress("UNCHECKED_CAST")
@@ -59,17 +65,27 @@ abstract class AppViewModel(application: Application) : AndroidViewModel(applica
         }
         return resourceStatus as ResourceLiveData<T>
     }
-    abstract fun onDispatchService(service: String):Resource<*>
-    abstract fun onCallRequest(service: String)
+    protected abstract fun onDispatchService(service: String):Resource<*>
+    protected abstract fun onCallRequest(service: String)
+    abstract fun disConnected()
     protected fun <T>request(service: String){
-        viewModelScope.launch {
-            load<T>(service)
+        if (AppHelper.isOnline){
+            viewModelScope.launch {
+                load<T>(service)
+            }
+        }else{
+            disConnected()
         }
+
     }
 
     protected fun <T>requestAsync(service: String){
-        viewModelScope.async {
-            load<T>(service)
+        if (AppHelper.isOnline){
+            viewModelScope.async {
+                load<T>(service)
+            }
+        }else{
+            disConnected()
         }
 
     }
@@ -122,4 +138,7 @@ abstract class AppViewModel(application: Application) : AndroidViewModel(applica
         }
         mCallbacks!!.notifyCallbacks(this, fieldId, null)
     }
+
+
+
 }

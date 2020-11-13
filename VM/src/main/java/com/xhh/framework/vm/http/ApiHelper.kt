@@ -2,7 +2,9 @@ package com.xhh.framework.vm.http
 
 import android.app.Application
 import android.util.Log
+import com.google.gson.Gson
 import com.google.gson.JsonParser
+import com.google.gson.TypeAdapter
 import com.xhh.framework.vm.http.call.CallToAdapterFactory
 import com.xhh.framework.vm.http.converter.ResourceConverterFactory
 import okhttp3.Cache
@@ -22,15 +24,15 @@ class ApiHelper<T> private constructor(
     private val app: Application,
     service: Class<T>,
     baseUrl: String,
-    private val headers: Headers? = null,
-    vararg keysAndValues: String,
+    private val interceptorOk: (builder: OkHttpClient.Builder) -> Unit,
+    private val process: (result: String, adapter: TypeAdapter<*>, gson: Gson) -> Resource<*>
 
     ) {
     companion object {
         private const val TAG: String = "http-log"
 
-        fun <T> create(app: Application, service: Class<T>, baseUrl: String, headers: Headers?,vararg keysAndValues: String): T {
-            return ApiHelper(app, service, baseUrl, headers,*keysAndValues).api
+        fun <T> create(app: Application, service: Class<T>, baseUrl: String,interceptorOk:(builder:OkHttpClient.Builder)->Unit,process: (result:String,adapter:TypeAdapter<*>,gson:Gson)->Resource<*>): T {
+            return ApiHelper(app, service, baseUrl, interceptorOk,process).api
         }
     }
 
@@ -38,15 +40,7 @@ class ApiHelper<T> private constructor(
 
     private val okHttpClient: OkHttpClient by lazy {
         with(OkHttpClient.Builder()) {
-            if (headers != null) {
-                addInterceptor {
-                    val request = it.request()
-                    val newRequest = request.newBuilder()
-                        .headers(headers)
-                        .build()
-                    it.proceed(newRequest)
-                }
-            }
+            interceptorOk(this)
             addInterceptor(HttpLoggingInterceptor {
                 Log.e(TAG, it)
             }.apply {
@@ -59,46 +53,43 @@ class ApiHelper<T> private constructor(
 
     init {
 
-        val codeKey = keysAndValues[0]
-        val successCode = keysAndValues[1]
-        val dataKey = keysAndValues[2]
-        val messageKey = keysAndValues[3]
-
         api = Retrofit.Builder()
             .baseUrl(baseUrl)
             .client(okHttpClient)
             .addConverterFactory(ResourceConverterFactory { result, adapter, gson ->
-                val jsonElement = JsonParser.parseString(result)
-                if (jsonElement.isJsonObject) {
-                    val jsonObject = jsonElement.asJsonObject
-                    val code = jsonObject[codeKey]
-                    val realCode = try {
-                        code.asString
-                    } catch (e: UnsupportedOperationException) {
-                        "${code.asInt}"
-                    }
-                    val message = jsonObject[messageKey].asString
-                    if (realCode == successCode) {
-                        val data = with(jsonObject[dataKey]) {
-                            when {
-                                isJsonObject -> {
-                                    asJsonObject
-                                }
-                                isJsonArray -> {
-                                    asJsonArray
-                                }
-                                else -> {
-                                    asJsonNull
-                                }
-                            }
-                        }
-                        Resource.success(adapter.fromJson(gson.toJson(data)))
-                    } else {
-                        Resource.error(realCode, message)
-                    }
-                } else {
-                    Resource.error<Any>("200", "body is not a json object")
-                }
+                process(result,adapter,gson)
+//                val jsonElement = JsonParser.parseString(result)
+//                if (jsonElement.isJsonObject) {
+//                    val jsonObject = jsonElement.asJsonObject
+//                    val code = jsonObject[codeKey]
+//                    val realCode = try {
+//                        code.asString
+//                    } catch (e: UnsupportedOperationException) {
+//                        "${code.asInt}"
+//                    }
+//                    val message = jsonObject[messageKey].asString
+//                    if (realCode == successCode) {
+//                        val data = with(jsonObject[dataKey]) {
+//                            when {
+//                                isJsonObject -> {
+//                                    asJsonObject
+//                                }
+//                                isJsonArray -> {
+//                                    asJsonArray
+//                                }
+//
+//                                else -> {
+//                                    asJsonNull
+//                                }
+//                            }
+//                        }
+//                        Resource.success(adapter.fromJson(gson.toJson(data)))
+//                    } else {
+//                        Resource.error(realCode, message)
+//                    }
+//                } else {
+//                    Resource.error<Any>("200", "body is not a json object")
+//                }
             })
             .addCallAdapterFactory(CallToAdapterFactory())
             .build()

@@ -11,6 +11,8 @@ interface NetworkStatus {
         const val CONNECTED:Int = 0
         const val NONE:Int = 1
         const val LOST:Int = 2
+        const val WIFI:Int  =3
+        const val PHONE:Int  =4
 
     }
 }

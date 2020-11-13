@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="AppItemTextStyle" parent="Widget.MaterialComponents.TextView">
+        <item name="android:background">@drawable/item_ripple</item>
+    </style>
+
+
+    <style name="AppDialogStyle" parent="Theme.MaterialComponents.Light.Dialog.Alert">
+        <item name="android:gravity">center</item>
+        <item name="android:gradientRadius">8dp</item>
+        <item name="android:dialogCornerRadius" tools:targetApi="p">8dp</item>
+    </style>
+</resources>

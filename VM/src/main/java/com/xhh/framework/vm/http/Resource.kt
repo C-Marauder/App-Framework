@@ -9,10 +9,14 @@ sealed class Resource<T>(val code: String?, val data: T?, val message: String?) 
 
 
     companion object {
-        internal fun <T> success(data: T?) = Success(data)
-        internal fun <T> error(code: String?, message: String?) = Error<T>(code, message)
+         fun <T> success(data: T?) :Resource<T>{
+             return Success(data)
+         }
+         fun <T> error(code: String?, message: String?):Resource<T>{
+             return  Error<T>(code, message)
+         }
     }
 
-   internal class Success<T>(data: T?) : Resource<T>(null, data, null)
-    internal class Error<T>(code: String?, message: String?) : Resource<T>(code, null, message)
+     internal class Success<T>(data: T?) : Resource<T>(null, data, null)
+     internal class Error<T>(code: String?, message: String?) : Resource<T>(code, null, message)
 }

@@ -16,7 +16,11 @@ internal class CallToResourceAdapter<T>(private val responseType: Type) :
     override fun responseType(): Type = responseType
 
     override fun adapt(call: Call<T>): Resource<T> {
-        return call.execute().body() as Resource<T>
+        return try {
+            call.execute().body() as Resource<T>
+        }catch (e:Exception){
+            Resource.error("404",e.message?:"")
+        }
 
     }
 }

@@ -1,6 +1,7 @@
 package com.hd.framework
 
 import android.app.Application
+import com.google.firebase.FirebaseApp
 import com.xhh.framework.vm.helper.AppHelper
 import com.xhh.framework.vm.http.ApiHelper
 import okhttp3.Headers
@@ -17,8 +18,7 @@ class App:Application() {
     }
     override fun onCreate() {
         super.onCreate()
-        api = ApiHelper.create(this,AppService::class.java,"https://hengjia-api-dev.wangqian.cn/sp-usermgtcomponent/api/",
-            Headers.of("FrontType" , "hdsp-app-ui","Authorization" ,""),"code","00000","data","message")
+        FirebaseApp.initializeApp(this)
 
     }
 }
