@@ -1,7 +1,6 @@
 package com.hd.framework
 
 import android.app.Application
-import com.google.firebase.FirebaseApp
 import com.xhh.framework.vm.helper.AppHelper
 import com.xhh.framework.vm.http.ApiHelper
 import okhttp3.Headers
@@ -18,7 +17,7 @@ class App:Application() {
     }
     override fun onCreate() {
         super.onCreate()
-        FirebaseApp.initializeApp(this)
+        //FirebaseApp.initializeApp(this)
 
     }
 }

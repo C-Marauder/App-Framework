@@ -10,7 +10,9 @@ import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkInfo
+import android.net.wifi.WifiManager
 import android.os.Bundle
+import android.telephony.TelephonyManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
@@ -34,7 +36,23 @@ internal class AppNetworkObserver constructor(private val application: Applicati
             application.getSystemService(Context.CONNECTIVITY_SERVICE)
         } as ConnectivityManager
     }
-
+    private val mWifiManager:WifiManager by lazy {
+        application.getSystemService(Context.WIFI_SERVICE) as WifiManager
+    }
+    private val mTelephonyManager:TelephonyManager by lazy {
+        application.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+    }
+    internal val networkType:Int get() {
+        return if (mWifiManager.isWifiEnabled && mWifiManager.wifiState == WifiManager.WIFI_STATE_ENABLED){
+            NetworkStatus.WIFI
+        }else{
+            if (mTelephonyManager.dataState == TelephonyManager.DATA_CONNECTED){
+                NetworkStatus.PHONE
+            }else{
+                NetworkStatus.NONE
+            }
+        }
+    }
 
     internal val isOnline:Boolean get() {
         return if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
