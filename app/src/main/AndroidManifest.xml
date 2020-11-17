@@ -12,7 +12,7 @@
         android:supportsRtl="true"
         android:name=".App"
         android:theme="@style/AppTheme">
-        <activity android:name=".material.MaterialActivity">
+        <activity android:name=".list.ListPage">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout>
+    <data>
+        <variable
+            name="content"
+            type="java.lang.String" />
+    </data>
+    <androidx.constraintlayout.widget.ConstraintLayout
+        xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
+        android:layout_height="56dp">
+        <com.google.android.material.textview.MaterialTextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="@{content}"
+            android:textSize="24sp"
+            android:gravity="center"
+            android:textColor="@android:color/background_dark"/>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>
