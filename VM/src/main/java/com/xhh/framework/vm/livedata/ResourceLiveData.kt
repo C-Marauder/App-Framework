@@ -12,7 +12,7 @@ import androidx.lifecycle.MutableLiveData
 internal class ResourceLiveData<T>: MutableLiveData<ResourceStatus<T>>() {
 
     fun loading(){
-        value = ResourceStatus.Loading()
+        postValue(ResourceStatus.Loading())
     }
 
     fun success(data: T?){

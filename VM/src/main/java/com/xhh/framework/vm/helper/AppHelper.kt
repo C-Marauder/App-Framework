@@ -30,7 +30,7 @@ import java.lang.IllegalArgumentException
 object AppHelper {
     private lateinit var mAppNetworkObserver: AppNetworkObserver
     lateinit var application: Application
-    lateinit var sp: DataStore<Preferences>
+    lateinit var dataStore: DataStore<Preferences>
     private lateinit var encryptedSharedPreferences: SharedPreferences
     private lateinit var mPackageInfo: PackageInfo
     val isOnline: Boolean
@@ -52,7 +52,7 @@ object AppHelper {
 
     internal fun init(application: Application) {
         this.application = application
-        sp = application.createDataStore(name = "app_config")
+        dataStore = application.createDataStore(name = "app_config")
 
         val masterKey = MasterKey.Builder(application,MasterKey.DEFAULT_MASTER_KEY_ALIAS)
             .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
@@ -92,21 +92,6 @@ object AppHelper {
 
 
     }
-    suspend inline fun <reified T:Any> write(key:String,value:T){
-        sp.edit {
-            it[preferencesKey<T>(key)]  = value
-        }
-
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    suspend inline fun<reified T:Any>  read(key: String):T?{
-        return sp.data.map {
-            it[preferencesKey<T>(key)]
-        }.first()
-
-    }
-
 
 
 }

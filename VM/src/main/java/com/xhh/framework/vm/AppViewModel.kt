@@ -1,6 +1,7 @@
 package com.xhh.framework.vm
 
 import android.app.Application
+import android.util.Log
 import androidx.databinding.Bindable
 import androidx.databinding.Observable
 import androidx.databinding.PropertyChangeRegistry
@@ -21,89 +22,104 @@ import java.util.concurrent.ConcurrentHashMap
  *   @Time:2020/10/24
  *   @Desc:
  */
-abstract class AppViewModel(application: Application) : AndroidViewModel(application),Observable {
+abstract class AppViewModel(application: Application) : AndroidViewModel(application), Observable {
     @Transient
     private var mCallbacks: PropertyChangeRegistry? = null
 
-    internal val mMessageObserver:MutableLiveData<String> by lazy {
+    internal val mMessageObserver: MutableLiveData<String> by lazy {
         MutableLiveData<String>()
     }
 
-    private val mResourceCallbacks:ConcurrentHashMap<String, ResourceLiveData<*>> by lazy {
+    private val mResourceCallbacks: ConcurrentHashMap<String, ResourceLiveData<*>> by lazy {
         ConcurrentHashMap<String, ResourceLiveData<*>>()
     }
-    @get:Bindable
-    var service:String?=null
-    set(value) {
-        field = value
-        notifyPropertyChanged(BR.service)
-    }
-    init {
-        addOnPropertyChangedCallback(object :Observable.OnPropertyChangedCallback(){
-            override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
 
-                if (!service.isNullOrEmpty() && propertyId == BR.service){
-                    onCallRequest(service!!)
-                }
-            }
 
-        })
-    }
-
-    fun updateUIByEvent(event:String){
+    fun updateUIByEvent(event: String) {
         mMessageObserver.value = event
     }
-    open fun load(service: String){
-        this.service = service
+    open fun networksSync(vararg services: String){
+        if (!services.isNullOrEmpty()){
+            viewModelScope.async(Dispatchers.IO) {
+                repeat(services.size){
+                    launch {
+                        realExecute<Any>(services[it])
+                    }
+                }
+
+            }
+        }
     }
+    /**
+     * 执行单个任务
+     */
+    open fun network(service: String){
+        onCallRequest(service)
+    }
+    /**
+     * 执行多个并发任务
+     */
+    open fun networks(vararg services: String){
+        if (!services.isNullOrEmpty()){
+
+            viewModelScope.async(Dispatchers.IO){
+                repeat(services.size){index->
+                    async {
+                        realExecute<Any>(services[index])
+                    }
+                }
+            }
+        }
+    }
+
+
     @Suppress("UNCHECKED_CAST")
-    internal fun <T>getResourceLiveData(service: String):ResourceLiveData<T>{
+    internal fun <T> getResourceLiveData(service: String): ResourceLiveData<T> {
         var resourceStatus = mResourceCallbacks[service]
-        if (resourceStatus == null){
+        if (resourceStatus == null) {
             resourceStatus = ResourceLiveData<T>()
             mResourceCallbacks[service] = resourceStatus
         }
         return resourceStatus as ResourceLiveData<T>
     }
-    protected abstract fun onDispatchService(service: String):Resource<*>
+
+    protected abstract fun onDispatchService(service: String): Resource<*>
     protected abstract fun onCallRequest(service: String)
     abstract fun disConnected()
-    protected fun <T>request(service: String){
-        if (AppHelper.isOnline){
-            viewModelScope.launch {
-                load<T>(service)
+    protected fun <T> request(service: String) {
+        if (AppHelper.isOnline) {
+            viewModelScope.launch(Dispatchers.IO) {
+                realExecute<T>(service)
             }
-        }else{
+        } else {
             disConnected()
         }
 
     }
 
-    protected fun <T>requestAsync(service: String){
-        if (AppHelper.isOnline){
-            viewModelScope.async {
-                load<T>(service)
+    protected fun <T> requestAsync(service: String) {
+        if (AppHelper.isOnline) {
+            viewModelScope.async(Dispatchers.IO) {
+                realExecute<T>(service)
             }
-        }else{
+        } else {
             disConnected()
         }
 
     }
 
     @Suppress("UNCHECKED_CAST")
-    private suspend fun <T>load(service: String){
+    private  fun <T> realExecute(service: String) {
         val resourceLiveData = getResourceLiveData<T>(service)
         resourceLiveData.loading()
-        withContext(viewModelScope.coroutineContext + Dispatchers.IO){
-            when(val resource = onDispatchService(service)){
-                is Resource.Success -> resourceLiveData.success(resource.data as T)
-                is Resource.Error -> resourceLiveData.error(resource.code!!, resource.message!!)
-            }
-
+        when (val resource = onDispatchService(service)) {
+            is Resource.Success -> resourceLiveData.success(resource.data as T)
+            is Resource.Error -> resourceLiveData.error(resource.code!!, resource.message!!)
         }
+
     }
 
-    override  fun addOnPropertyChangedCallback(callback: Observable.OnPropertyChangedCallback?) {
+    override fun addOnPropertyChangedCallback(callback: Observable.OnPropertyChangedCallback?) {
         synchronized(this) {
             if (mCallbacks == null) {
                 mCallbacks = PropertyChangeRegistry()
@@ -138,7 +154,6 @@ abstract class AppViewModel(application: Application) : AndroidViewModel(applica
         }
         mCallbacks!!.notifyCallbacks(this, fieldId, null)
     }
-
 
 
 }
