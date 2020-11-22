@@ -30,19 +30,8 @@ import kotlinx.android.synthetic.main.page_list.*
 class ListPage:AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val myViewModel = getViewModel<MyViewModel>()
-        for (i in 1..10){
-            myViewModel.register<String>("$i",this,onLoading = {},onSuccess = {
-                Log.e("===","=+=$it")
-            },onError = {
-                code, msg ->
 
 
-            })
-
-        }
-
-            myViewModel.execute("1","2","3","4","5","6","7","8","9","10")
         setContentView(R.layout.page_list)
         val items = mutableListOf<String>()
         for (i in 1..24){
@@ -65,7 +54,7 @@ class ListPage:AppCompatActivity() {
 
         })
 
-        listView.init(onBindAdapter = {
+        listView.recyclerView.init(onBindAdapter = {
             adapter = ConcatAdapter(listAdapter,loadAdapter)
         },divider = GradientDrawable().apply {
             setColor(Color.parseColor("#f1f1f1"))
