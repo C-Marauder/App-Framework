@@ -12,6 +12,9 @@ import android.view.animation.Transformation
 import android.widget.FrameLayout
 import androidx.core.view.NestedScrollingParent2
 import androidx.core.view.ViewCompat
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.recyclerview.widget.RecyclerView
 import kotlin.math.abs
 import kotlin.math.max
@@ -49,24 +52,39 @@ class RefreshLayout : FrameLayout, NestedScrollingParent2 {
         init()
     }
 
-    private val DRAG_RATE: Float = .75f
+    private val DRAG_RATE: Float = .5f
 
     private val range: Int by lazy {
         resources.displayMetrics.heightPixels / 5
     }
     lateinit var recyclerView: RecyclerView
-    private var interrupted: Boolean = false
-    private var scaledTouchSlop: Int = 0
+    private var dragUp: Boolean = false
+    private var isRefresh:Boolean = false
     private lateinit var reboundAnimator: ReboundAnimator
+    private var dragPercent:Float  =0f
+    private val refreshObserver:MutableLiveData<Boolean> by lazy {
+        MutableLiveData<Boolean>()
+    }
+    private var refreshListener:((refreshObserver:MutableLiveData<Boolean>)->Unit)?=null
     private fun init() {
         recyclerView = RecyclerView(context)
         addView(recyclerView, -1, -1)
         setBackgroundResource(android.R.color.holo_orange_light)
-        scaledTouchSlop = ViewConfiguration.get(context).scaledTouchSlop
         reboundAnimator = ReboundAnimator()
+        refreshObserver.observe(context as LifecycleOwner){
+            if (it){
+                if (scrollY !=0){
+                    reboundAnimator.springBack()
 
+                }
+                dragPercent =0f
+                isRefresh =false
+            }
+        }
     }
-
+    fun setRefreshListener(refreshListener:(observer:MutableLiveData<Boolean>)->Unit){
+        this.refreshListener = refreshListener
+    }
     override fun onStartNestedScroll(child: View, target: View, axes: Int, type: Int): Boolean {
         return target is RecyclerView
     }
@@ -80,16 +98,14 @@ class RefreshLayout : FrameLayout, NestedScrollingParent2 {
         if (target.scrollY !=0){
             target.scrollTo(0,0)
         }
-        interrupted = false
-        if (scrollY !=0){
+
+        if (scrollY !=0 && !isRefresh){
             reboundAnimator.springBack()
         }
 
 
-    }
 
-    private var currentDragPercent: Float = 0f
-    private var currentScrollY: Float = 0f
+    }
     override fun onNestedScroll(
         target: View,
         dxConsumed: Int,
@@ -99,34 +115,41 @@ class RefreshLayout : FrameLayout, NestedScrollingParent2 {
         type: Int
     ) {
 
-        if (interrupted && target is RecyclerView && type == ViewCompat.TYPE_TOUCH) {
-            currentScrollY = abs(dyUnconsumed) * DRAG_RATE
-            currentDragPercent = currentScrollY / range * 1f
-            if (currentDragPercent > 1 || currentDragPercent < 0) {
-                return
-            }
-            val boundedDragPercent = min(1f, abs(currentDragPercent))
-            val extraOS = currentScrollY - range
-            val tensionSlingshotPercent = max(0f, min(extraOS, range * 1f * 2) / range * 1f)
-            val tensionPercent =
-                (tensionSlingshotPercent / 4 - (tensionSlingshotPercent / 4).toDouble().pow(
-                    2.0
-                )) * 2f
-            val extraMove = range * tensionPercent / 2f
-            val targetY = (range * boundedDragPercent + extraMove).toInt()
+        if (dragUp && target is RecyclerView && type == ViewCompat.TYPE_TOUCH) {
+            if (dragPercent ==1f && !isRefresh){
+                isRefresh = true
+                refreshListener?.invoke(refreshObserver)
+            }else{
+                val currentScrollY = dyUnconsumed * DRAG_RATE
+                scrollBy(0, currentScrollY.toInt())
+                dragPercent = abs(scrollY)/range*1f
 
-            scrollBy(0, -targetY)
+            }
 
         }
 
     }
 
     override fun onNestedPreScroll(target: View, dx: Int, dy: Int, consumed: IntArray, type: Int) {
+        if (isRefresh){
+            consumed[1] = dy
+            return
+        }
+        if (target is RecyclerView && type == ViewCompat.TYPE_TOUCH){
+            if (dy>0){
+                if (scrollY <0 ){
+                    scrollBy(0,dy)
+                    consumed[1] = dy
+                }else{
+                    consumed[1] = 0
+                }
 
-        interrupted =  target is RecyclerView && type == ViewCompat.TYPE_TOUCH && !target.canScrollVertically(-1) && dy < 0 && abs(
-            dy
-        ) > scaledTouchSlop
+            }else{
+                dragUp = !target.canScrollVertically(-1)
 
+            }
+
+        }
 
     }
 

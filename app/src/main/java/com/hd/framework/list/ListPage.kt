@@ -21,6 +21,8 @@ import com.xhh.ui.rv.ItemAdapter
 import com.xhh.ui.rv.init
 import com.xhh.ui.utils.dp
 import kotlinx.android.synthetic.main.page_list.*
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 /**
  *   @Author:小灰灰
@@ -53,7 +55,14 @@ class ListPage:AppCompatActivity() {
             dataBinding, position ->
 
         })
+        listView.setRefreshListener {
+            Log.e("===","===>>>>refresh")
+            lifecycleScope.launch {
+                delay(5000)
+                it.value = true
 
+            }
+        }
         listView.recyclerView.init(onBindAdapter = {
             adapter = ConcatAdapter(listAdapter,loadAdapter)
         },divider = GradientDrawable().apply {
