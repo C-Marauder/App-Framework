@@ -1,34 +1,17 @@
 package com.hd.framework.list
 
 import android.app.Application
-import android.graphics.Color
-import android.graphics.drawable.GradientDrawable
-import android.graphics.drawable.ShapeDrawable
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.ConcatAdapter
-import com.google.android.material.shape.MaterialShapeDrawable
 import com.hd.framework.R
-import com.hd.framework.databinding.ItemListBinding
-import com.hd.framework.databinding.ItemLoadingBinding
-import com.xhh.ui.utils.dp
-import kotlinx.android.synthetic.main.page_list.*
+import com.xhh.framework.vm.AppViewModel
+import com.xhh.framework.vm.http.Resource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
-import com.xhh.framework.vm.AppViewModel
-import com.xhh.framework.vm.http.Resource
-import com.xhh.framework.vm.utils.getViewModel
-import com.xhh.framework.vm.utils.register
-import com.xhh.ui.rv.ItemAdapter
-import com.xhh.ui.rv.init
-import com.xhh.ui.utils.dp
-import kotlinx.android.synthetic.main.page_list.*
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 /**
  *   @Author:小灰灰

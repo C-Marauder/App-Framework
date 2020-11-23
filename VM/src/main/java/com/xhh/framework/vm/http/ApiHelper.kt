@@ -58,42 +58,9 @@ class ApiHelper<T> private constructor(
             .client(okHttpClient)
             .addConverterFactory(ResourceConverterFactory { result, adapter, gson ->
                 process(result,adapter,gson)
-//                val jsonElement = JsonParser.parseString(result)
-//                if (jsonElement.isJsonObject) {
-//                    val jsonObject = jsonElement.asJsonObject
-//                    val code = jsonObject[codeKey]
-//                    val realCode = try {
-//                        code.asString
-//                    } catch (e: UnsupportedOperationException) {
-//                        "${code.asInt}"
-//                    }
-//                    val message = jsonObject[messageKey].asString
-//                    if (realCode == successCode) {
-//                        val data = with(jsonObject[dataKey]) {
-//                            when {
-//                                isJsonObject -> {
-//                                    asJsonObject
-//                                }
-//                                isJsonArray -> {
-//                                    asJsonArray
-//                                }
-//
-//                                else -> {
-//                                    asJsonNull
-//                                }
-//                            }
-//                        }
-//                        Resource.success(adapter.fromJson(gson.toJson(data)))
-//                    } else {
-//                        Resource.error(realCode, message)
-//                    }
-//                } else {
-//                    Resource.error<Any>("200", "body is not a json object")
-//                }
             })
             .addCallAdapterFactory(CallToAdapterFactory())
             .build()
             .create(service)
-
     }
 }
