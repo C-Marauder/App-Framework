@@ -31,7 +31,8 @@ abstract class AppViewModel(application: Application) : AndroidViewModel(applica
         ConcurrentHashMap<String, ResourceLiveData<*>>()
     }
 
-    fun updateUIByEvent(event:String){
+
+    fun updateUIByEvent(event: String) {
         mMessageObserver.value = event
     }
     open fun load(service: String){
@@ -56,24 +57,61 @@ abstract class AppViewModel(application: Application) : AndroidViewModel(applica
             }
         }
     }
+    open fun networksSync(vararg services: String){
+        if (!services.isNullOrEmpty()){
+            viewModelScope.async(Dispatchers.IO) {
+                repeat(services.size){
+                    launch {
+                        realExecute<Any>(services[it])
+                    }
+                }
+
+            }
+        }
+    }
+    /**
+     * 执行单个任务
+     */
+    open fun network(service: String){
+        onCallRequest(service)
+    }
+    /**
+     * 执行多个并发任务
+     */
+    open fun networks(vararg services: String){
+        if (!services.isNullOrEmpty()){
+
+            viewModelScope.async(Dispatchers.IO){
+                repeat(services.size){index->
+                    async {
+                        realExecute<Any>(services[index])
+                    }
+                }
+            }
+        }
+    }
+
+
     @Suppress("UNCHECKED_CAST")
-    internal fun <T>getResourceLiveData(service: String):ResourceLiveData<T>{
+    internal fun <T> getResourceLiveData(service: String): ResourceLiveData<T> {
         var resourceStatus = mResourceCallbacks[service]
-        if (resourceStatus == null){
+        if (resourceStatus == null) {
             resourceStatus = ResourceLiveData<T>()
             mResourceCallbacks[service] = resourceStatus
         }
         return resourceStatus as ResourceLiveData<T>
     }
-    protected abstract fun onDispatchService(service: String):Resource<*>
+
+    protected abstract fun onDispatchService(service: String): Resource<*>
     protected abstract fun onCallRequest(service: String)
     abstract fun disConnected()
+
     protected fun <T>request(service: String){
         if (AppHelper.isOnline){
             viewModelScope.launch(Dispatchers.IO) {
                 realExecute<T>(service)
             }
-        }else{
+        } else {
             disConnected()
         }
 
@@ -91,10 +129,10 @@ abstract class AppViewModel(application: Application) : AndroidViewModel(applica
     }
 
     @Suppress("UNCHECKED_CAST")
-    private  fun <T> realExecute(service: String){
+    private  fun <T> realExecute(service: String) {
         val resourceLiveData = getResourceLiveData<T>(service)
         resourceLiveData.loading()
-        when(val resource = onDispatchService(service)){
+        when (val resource = onDispatchService(service)) {
             is Resource.Success -> resourceLiveData.success(resource.data as T)
             is Resource.Error -> resourceLiveData.error(resource.code!!, resource.message!!)
         }
@@ -136,7 +174,6 @@ abstract class AppViewModel(application: Application) : AndroidViewModel(applica
         }
         mCallbacks!!.notifyCallbacks(this, fieldId, null)
     }
-
 
 
 }

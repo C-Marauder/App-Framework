@@ -3,6 +3,7 @@ package com.xhh.ui.rv
 import android.graphics.drawable.Drawable
 import android.util.Log
 import androidx.recyclerview.widget.DividerItemDecoration
+
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE
