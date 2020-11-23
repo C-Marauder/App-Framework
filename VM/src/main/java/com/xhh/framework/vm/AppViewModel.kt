@@ -1,7 +1,6 @@
 package com.xhh.framework.vm
 
 import android.app.Application
-import androidx.databinding.Bindable
 import androidx.databinding.Observable
 import androidx.databinding.PropertyChangeRegistry
 import androidx.lifecycle.AndroidViewModel
@@ -13,7 +12,6 @@ import com.xhh.framework.vm.livedata.ResourceLiveData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -32,29 +30,31 @@ abstract class AppViewModel(application: Application) : AndroidViewModel(applica
     private val mResourceCallbacks:ConcurrentHashMap<String, ResourceLiveData<*>> by lazy {
         ConcurrentHashMap<String, ResourceLiveData<*>>()
     }
-    @get:Bindable
-    var service:String?=null
-    set(value) {
-        field = value
-        notifyPropertyChanged(BR.service)
-    }
-    init {
-        addOnPropertyChangedCallback(object :Observable.OnPropertyChangedCallback(){
-            override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
-
-                if (!service.isNullOrEmpty() && propertyId == BR.service){
-                    onCallRequest(service!!)
-                }
-            }
-
-        })
-    }
 
     fun updateUIByEvent(event:String){
         mMessageObserver.value = event
     }
     open fun load(service: String){
-        this.service = service
+        onCallRequest(service)
+    }
+    open fun <T> execute(service: String){
+        onCallRequest(service)
+    }
+    open fun execute(vararg services: String){
+        if (services.isNotEmpty()){
+            viewModelScope.async(Dispatchers.IO) {
+                try {
+                    services.forEach {
+                        async {
+                            realExecute<Any>(it)
+                        }
+                    }
+
+                }catch (e:Exception){
+                    e.printStackTrace()
+                }
+            }
+        }
     }
     @Suppress("UNCHECKED_CAST")
     internal fun <T>getResourceLiveData(service: String):ResourceLiveData<T>{
@@ -70,8 +70,8 @@ abstract class AppViewModel(application: Application) : AndroidViewModel(applica
     abstract fun disConnected()
     protected fun <T>request(service: String){
         if (AppHelper.isOnline){
-            viewModelScope.launch {
-                load<T>(service)
+            viewModelScope.launch(Dispatchers.IO) {
+                realExecute<T>(service)
             }
         }else{
             disConnected()
@@ -81,8 +81,8 @@ abstract class AppViewModel(application: Application) : AndroidViewModel(applica
 
     protected fun <T>requestAsync(service: String){
         if (AppHelper.isOnline){
-            viewModelScope.async {
-                load<T>(service)
+            viewModelScope.async(Dispatchers.IO) {
+                realExecute<T>(service)
             }
         }else{
             disConnected()
@@ -91,16 +91,14 @@ abstract class AppViewModel(application: Application) : AndroidViewModel(applica
     }
 
     @Suppress("UNCHECKED_CAST")
-    private suspend fun <T>load(service: String){
+    private  fun <T> realExecute(service: String){
         val resourceLiveData = getResourceLiveData<T>(service)
         resourceLiveData.loading()
-        withContext(viewModelScope.coroutineContext + Dispatchers.IO){
-            when(val resource = onDispatchService(service)){
-                is Resource.Success -> resourceLiveData.success(resource.data as T)
-                is Resource.Error -> resourceLiveData.error(resource.code!!, resource.message!!)
-            }
-
+        when(val resource = onDispatchService(service)){
+            is Resource.Success -> resourceLiveData.success(resource.data as T)
+            is Resource.Error -> resourceLiveData.error(resource.code!!, resource.message!!)
         }
+
     }
 
     override  fun addOnPropertyChangedCallback(callback: Observable.OnPropertyChangedCallback?) {

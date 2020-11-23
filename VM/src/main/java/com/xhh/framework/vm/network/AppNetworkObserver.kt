@@ -176,17 +176,19 @@ internal class AppNetworkObserver constructor(private val application: Applicati
         override fun onReceive(context: Context?, intent: Intent?) {
             intent?.let {
                 if (it.action == ConnectivityManager.CONNECTIVITY_ACTION){
-                    val networkInfo = it.getParcelableExtra(ConnectivityManager.EXTRA_EXTRA_INFO) as NetworkInfo
-                    //networkInfo.type
-                    mNetworkLiveData.value = when(networkInfo.state){
-                        NetworkInfo.State.CONNECTED-> when(networkInfo.type){
-                            ConnectivityManager.TYPE_WIFI-> NetworkStatus.WIFI
-                            else-> NetworkStatus.PHONE
+                    it.getParcelableExtra<NetworkInfo>(ConnectivityManager.EXTRA_EXTRA_INFO)?.let {networkInfo->
+                        //networkInfo.type
+                        mNetworkLiveData.value = when(networkInfo.state){
+                            NetworkInfo.State.CONNECTED-> when(networkInfo.type){
+                                ConnectivityManager.TYPE_WIFI-> NetworkStatus.WIFI
+                                else-> NetworkStatus.PHONE
+                            }
+                            NetworkInfo.State.DISCONNECTED->NetworkStatus.LOST
+                            NetworkInfo.State.UNKNOWN->NetworkStatus.NONE
+                            else -> NetworkStatus.NONE
                         }
-                        NetworkInfo.State.DISCONNECTED->NetworkStatus.LOST
-                        NetworkInfo.State.UNKNOWN->NetworkStatus.NONE
-                        else -> NetworkStatus.NONE
                     }
+
                 }
             }
         }

@@ -1,26 +1,19 @@
 package com.xhh.framework.vm.helper
 
 import android.app.Application
-import android.content.Context
 import android.content.SharedPreferences
 import android.content.pm.PackageInfo
-import android.security.keystore.KeyGenParameterSpec
-import android.util.Log
 import androidx.core.content.edit
-import androidx.datastore.DataStore
-import androidx.datastore.Serializer
-import androidx.datastore.createDataStore
-import androidx.datastore.preferences.*
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.preferencesKey
+import androidx.datastore.preferences.createDataStore
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
-import androidx.security.crypto.MasterKeys
-import com.xhh.framework.vm.BuildConfig
 import com.xhh.framework.vm.network.AppNetworkObserver
-import kotlinx.coroutines.flow.*
-import java.io.IOException
-import java.io.InputStream
-import java.io.OutputStream
-import java.lang.IllegalArgumentException
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 
 /**
  *   @Author:小灰灰
@@ -30,7 +23,7 @@ import java.lang.IllegalArgumentException
 object AppHelper {
     private lateinit var mAppNetworkObserver: AppNetworkObserver
     lateinit var application: Application
-    lateinit var sp: DataStore<Preferences>
+    lateinit var dataStore: DataStore<Preferences>
     private lateinit var encryptedSharedPreferences: SharedPreferences
     private lateinit var mPackageInfo: PackageInfo
     val isOnline: Boolean
@@ -52,7 +45,7 @@ object AppHelper {
 
     internal fun init(application: Application) {
         this.application = application
-        sp = application.createDataStore(name = "app_config")
+        dataStore = application.createDataStore(name = "app_config")
 
         val masterKey = MasterKey.Builder(application,MasterKey.DEFAULT_MASTER_KEY_ALIAS)
             .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
@@ -93,7 +86,7 @@ object AppHelper {
 
     }
     suspend inline fun <reified T:Any> write(key:String,value:T){
-        sp.edit {
+        dataStore.edit {
             it[preferencesKey<T>(key)]  = value
         }
 
@@ -101,10 +94,9 @@ object AppHelper {
 
     @Suppress("UNCHECKED_CAST")
     suspend inline fun<reified T:Any>  read(key: String):T?{
-        return sp.data.map {
+        return dataStore.data.map {
             it[preferencesKey<T>(key)]
         }.first()
-
     }
 
 
