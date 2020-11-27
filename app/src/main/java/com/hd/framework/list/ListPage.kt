@@ -1,5 +1,6 @@
 package com.hd.framework.list
 
+import android.Manifest
 import android.app.Application
 import android.os.Bundle
 import android.util.Log
@@ -8,6 +9,8 @@ import androidx.lifecycle.lifecycleScope
 import com.hd.framework.R
 import com.xhh.framework.vm.AppViewModel
 import com.xhh.framework.vm.http.Resource
+import com.xhh.ui.ModuleHostActivity
+import com.xhh.ui.result.ResultCaller
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
@@ -18,20 +21,16 @@ import kotlinx.coroutines.isActive
  *   @Time:2020/11/15
  *   @Desc:
  */
-class ListPage:AppCompatActivity() {
+class ListPage:ModuleHostActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.page_list)
-        lifecycleScope.async (Dispatchers.IO){
-            for (i in 1..10){
-                async {
-                    while (isActive){
-                        delay(1000)
-                        Log.e("===$i","====》》》")
-                    }
-                }
-            }
+
+        getResultCaller().register<HashMap<String,Boolean>>(ResultCaller.PERMISSION_MULTI){
+            Log.e("===","===$it")
         }
+
+        getResultCaller().request(Manifest.permission.WRITE_EXTERNAL_STORAGE,Manifest.permission.CAMERA)
     }
 
 

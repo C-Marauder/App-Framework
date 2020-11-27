@@ -10,6 +10,7 @@ sealed class ResourceStatus<T>(val status:Int,val code:String?,val data:T?,val m
         internal const val LOADING:Int = 1
         internal const val SUCCESS:Int  =2
         internal const val ERROR:Int= 3
+        internal const val DB:Int =4
 
 
 
@@ -18,4 +19,5 @@ sealed class ResourceStatus<T>(val status:Int,val code:String?,val data:T?,val m
     internal class Loading<T>:ResourceStatus<T>(LOADING,null,null,null)
     internal class Success<T>(data: T?):ResourceStatus<T>(SUCCESS,null,data,null)
     internal class Error<T>(code: String?,message: String?):ResourceStatus<T>(ERROR,code,null,message)
+    internal class DB<T>(data: T):ResourceStatus<T>(DB,null,data = data,message = null)
 }

@@ -2,6 +2,7 @@ package com.xhh.ui.rv
 
 import android.animation.ValueAnimator
 import android.content.Context
+import android.graphics.Color
 import android.util.AttributeSet
 import android.util.Log
 import android.view.View
@@ -26,7 +27,7 @@ import kotlin.math.pow
  *   @Time:2020/11/21
  *   @Desc:
  */
-class RefreshLayout : FrameLayout, NestedScrollingParent2 {
+class RefreshRecyclerView : FrameLayout, NestedScrollingParent2 {
     constructor(context: Context) : super(context) {
         init()
     }
@@ -67,7 +68,9 @@ class RefreshLayout : FrameLayout, NestedScrollingParent2 {
     }
     private var refreshListener:((refreshObserver:MutableLiveData<Boolean>)->Unit)?=null
     private fun init() {
-        recyclerView = RecyclerView(context)
+        recyclerView = RecyclerView(context).apply {
+            setBackgroundColor(Color.parseColor("#fafafa"))
+        }
         addView(recyclerView, -1, -1)
         setBackgroundResource(android.R.color.holo_orange_light)
         reboundAnimator = ReboundAnimator()

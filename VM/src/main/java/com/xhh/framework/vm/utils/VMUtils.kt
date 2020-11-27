@@ -13,21 +13,32 @@ import com.xhh.framework.vm.AppViewModel
  */
 
 
-fun <T> AppViewModel.register(service: String,lifecycleOwner: LifecycleOwner,onLoading:()->Unit,
-                              onSuccess:(data:T?)->Unit,onError:(code:String,msg:String)->Unit){
-    this.getResourceLiveData<T>(service).observer(lifecycleOwner,onLoading,onSuccess,onError)
+fun <T> AppViewModel.register(
+    service: String,
+    lifecycleOwner: LifecycleOwner, onLoading: () -> Unit,
+    onSuccess: (data: T?) -> Unit,
+    onError: (code: String, msg: String) -> Unit,
+    onLoadFromDB:((data:T)->Unit)?=null
+) {
+    this.getResourceLiveData<T>(service).observer(lifecycleOwner, onLoading, onSuccess, onError,onLoadFromDB)
 }
-inline fun <reified T:AppViewModel> LifecycleOwner.getViewModel():T{
-    return when(this){
-        is Fragment-> ViewModelProvider.AndroidViewModelFactory.getInstance(requireActivity().application).create(T::class.java)
-        is AppCompatActivity -> ViewModelProvider.AndroidViewModelFactory.getInstance(this.application).create(T::class.java)
+
+inline fun <reified T : AppViewModel> LifecycleOwner.getViewModel(): T {
+    return when (this) {
+        is Fragment -> ViewModelProvider.AndroidViewModelFactory.getInstance(requireActivity().application)
+            .create(T::class.java)
+        is AppCompatActivity -> ViewModelProvider.AndroidViewModelFactory.getInstance(this.application)
+            .create(T::class.java)
         else -> throw Exception("")
     }
 }
 
 
-fun AppViewModel.registerEvent(lifecycleOwner: LifecycleOwner, onReceiver:(event:String)->Unit){
-    mMessageObserver.observe(lifecycleOwner){
+fun AppViewModel.registerEvent(
+    lifecycleOwner: LifecycleOwner,
+    onReceiver: (event: String) -> Unit
+) {
+    mMessageObserver.observe(lifecycleOwner) {
         onReceiver(it)
     }
 

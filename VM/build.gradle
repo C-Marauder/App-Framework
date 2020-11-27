@@ -43,4 +43,4 @@ dependencies {
 
 }
 
-//apply from: 'upload.gradle'
+apply from: 'upload.gradle'

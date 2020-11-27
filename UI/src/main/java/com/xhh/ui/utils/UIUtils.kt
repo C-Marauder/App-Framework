@@ -1,7 +1,9 @@
 package com.xhh.ui.utils
 
+import android.content.pm.PackageManager
 import android.util.TypedValue
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
@@ -37,4 +39,18 @@ inline fun <reified T:AppCompatActivity> T.snack(msg:String,noinline init:(Snack
         }
 
     }.show()
+}
+
+
+inline fun <reified T:AppCompatActivity> T.checkPermissions(vararg permissions:String):Boolean{
+    if (!permissions.isNullOrEmpty()){
+        return permissions.none {permission->
+           ContextCompat.checkSelfPermission(this,permission) != PackageManager.PERMISSION_GRANTED
+        }
+    }
+    return true
+}
+
+inline fun <reified T:Fragment> T.checkPermissions(vararg permissions: String):Boolean{
+   return  (requireActivity() as AppCompatActivity).checkPermissions(*permissions)
 }

@@ -127,11 +127,14 @@ abstract class AppViewModel(application: Application) : AndroidViewModel(applica
         }
 
     }
-
+    open fun loadDataFromDB(service: String):Resource<*>?=null
     @Suppress("UNCHECKED_CAST")
     private  fun <T> realExecute(service: String) {
         val resourceLiveData = getResourceLiveData<T>(service)
         resourceLiveData.loading()
+        loadDataFromDB(service)?.let {
+            resourceLiveData.successFormDB(it.data as T)
+        }
         when (val resource = onDispatchService(service)) {
             is Resource.Success -> resourceLiveData.success(resource.data as T)
             is Resource.Error -> resourceLiveData.error(resource.code!!, resource.message!!)

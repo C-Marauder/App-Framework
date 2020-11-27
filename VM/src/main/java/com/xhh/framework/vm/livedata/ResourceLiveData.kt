@@ -18,17 +18,19 @@ internal class ResourceLiveData<T>: MutableLiveData<ResourceStatus<T>>() {
     fun success(data: T?){
         postValue(ResourceStatus.Success(data))
     }
-
+    fun successFormDB(data: T){
+        postValue(ResourceStatus.DB(data))
+    }
     fun error(code: String,message:String){
         postValue(ResourceStatus.Error(code,message))
     }
-    fun observer(lifecycleOwner: LifecycleOwner,onLoading:()->Unit,onSuccess:(data:T?)->Unit,onError:(code:String,msg:String)->Unit){
+    fun observer(lifecycleOwner: LifecycleOwner,onLoading:()->Unit,onSuccess:(data:T?)->Unit,onError:(code:String,msg:String)->Unit,onLoadFromDB:((data:T)->Unit)?=null){
         observe(lifecycleOwner){
             when(it.status){
                 ResourceStatus.LOADING-> onLoading()
                 ResourceStatus.SUCCESS-> onSuccess(it.data)
                 ResourceStatus.ERROR->onError(it.code!!,it.message!!)
-
+                ResourceStatus.DB->onLoadFromDB?.invoke(it.data!!)
             }
         }
     }

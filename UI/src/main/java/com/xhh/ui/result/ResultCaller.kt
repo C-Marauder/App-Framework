@@ -52,7 +52,7 @@ class ResultCaller private constructor(private val activityResultCaller: Activit
     }
 
     fun request(vararg permission: String) {
-        if (permission.isNullOrEmpty()) {
+        if (!permission.isNullOrEmpty()) {
             if (permission.size == 1) {
                 mPermissionLauncher?.launch(permission[0])
             } else {
