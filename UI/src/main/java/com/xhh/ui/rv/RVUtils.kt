@@ -18,7 +18,7 @@ import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE
 inline fun <reified T : RecyclerView> T.initRV(
     layoutManager: RecyclerView.LayoutManager? = null,
     divider: Drawable? = null,
-    onBindAdapter: T.() -> Unit,
+    onBindAdapter: T.() -> RecyclerView.Adapter<*>,
     noinline onLoadMore: ((page: Int) -> Unit)? = null
 ) {
 
@@ -35,7 +35,7 @@ inline fun <reified T : RecyclerView> T.initRV(
             it.invoke(page)
         })
     }
-    onBindAdapter(this)
+    adapter = onBindAdapter(this)
 
 
 }

@@ -27,7 +27,7 @@ import kotlin.math.pow
  *   @Time:2020/11/21
  *   @Desc:
  */
-class RefreshRecyclerView : FrameLayout, NestedScrollingParent2 {
+class SwipeRecyclerView : FrameLayout, NestedScrollingParent2 {
     constructor(context: Context) : super(context) {
         init()
     }
@@ -58,15 +58,16 @@ class RefreshRecyclerView : FrameLayout, NestedScrollingParent2 {
     private val range: Int by lazy {
         resources.displayMetrics.heightPixels / 5
     }
-    lateinit var recyclerView: RecyclerView
+    private lateinit var recyclerView: RecyclerView
     private var dragUp: Boolean = false
-    private var isRefresh:Boolean = false
+    private var dragDown: Boolean = false
+    private var isLoading: Boolean = false
     private lateinit var reboundAnimator: ReboundAnimator
-    private var dragPercent:Float  =0f
-    private val refreshObserver:MutableLiveData<Boolean> by lazy {
+    private var dragPercent: Float = 0f
+    private val refreshObserver: MutableLiveData<Boolean> by lazy {
         MutableLiveData<Boolean>()
     }
-    private var refreshListener:((refreshObserver:MutableLiveData<Boolean>)->Unit)?=null
+    private var refreshListener: ((refreshObserver: MutableLiveData<Boolean>) -> Unit)? = null
     private fun init() {
         recyclerView = RecyclerView(context).apply {
             setBackgroundColor(Color.parseColor("#fafafa"))
@@ -74,20 +75,26 @@ class RefreshRecyclerView : FrameLayout, NestedScrollingParent2 {
         addView(recyclerView, -1, -1)
         setBackgroundResource(android.R.color.holo_orange_light)
         reboundAnimator = ReboundAnimator()
-        refreshObserver.observe(context as LifecycleOwner){
-            if (it){
-                if (scrollY !=0){
+        refreshObserver.observe(context as LifecycleOwner) {
+            if (it) {
+                if (scrollY != 0) {
                     reboundAnimator.springBack()
-
                 }
-                dragPercent =0f
-                isRefresh =false
+                dragPercent = 0f
+                isLoading = false
             }
         }
     }
-    fun setRefreshListener(refreshListener:(observer:MutableLiveData<Boolean>)->Unit){
+
+    fun set(action: RecyclerView.() -> Unit): SwipeRecyclerView {
+        action(recyclerView)
+        return this
+    }
+
+    fun setRefreshListener(refreshListener: (observer: MutableLiveData<Boolean>) -> Unit) {
         this.refreshListener = refreshListener
     }
+
     override fun onStartNestedScroll(child: View, target: View, axes: Int, type: Int): Boolean {
         return target is RecyclerView
     }
@@ -96,19 +103,24 @@ class RefreshRecyclerView : FrameLayout, NestedScrollingParent2 {
 
     }
 
+    override fun onNestedFling(
+        target: View,
+        velocityX: Float,
+        velocityY: Float,
+        consumed: Boolean
+    ): Boolean {
+        return super.onNestedFling(target, velocityX, velocityY, consumed)
+    }
 
     override fun onStopNestedScroll(target: View, type: Int) {
-        if (target.scrollY !=0){
-            target.scrollTo(0,0)
-        }
 
-        if (scrollY !=0 && !isRefresh){
+        if (scrollY != 0 && !isLoading) {
             reboundAnimator.springBack()
         }
 
 
-
     }
+
     override fun onNestedScroll(
         target: View,
         dxConsumed: Int,
@@ -118,50 +130,57 @@ class RefreshRecyclerView : FrameLayout, NestedScrollingParent2 {
         type: Int
     ) {
 
-        if (dragUp && target is RecyclerView && type == ViewCompat.TYPE_TOUCH) {
-            if (dragPercent ==1f && !isRefresh){
-                isRefresh = true
-                refreshListener?.invoke(refreshObserver)
-            }else{
-                val currentScrollY = dyUnconsumed * DRAG_RATE
-                scrollBy(0, currentScrollY.toInt())
-                dragPercent = abs(scrollY)/range*1f
+        if (target is RecyclerView && type == ViewCompat.TYPE_TOUCH ) {
+            if (dragDown or dragUp) {
+                if (dragPercent == 1f && !isLoading) {
+                    isLoading = true
+                    refreshListener?.invoke(refreshObserver)
+                } else {
+                    val currentScrollY = dyUnconsumed * DRAG_RATE
+                    scrollBy(0, currentScrollY.toInt())
+                    dragPercent = abs(scrollY) / range * 1f
 
+                }
+            }else{
+                scrollTo(0,0)
             }
+
 
         }
 
     }
 
     override fun onNestedPreScroll(target: View, dx: Int, dy: Int, consumed: IntArray, type: Int) {
-        if (isRefresh){
+        if (isLoading) {
             consumed[1] = dy
             return
         }
-        if (target is RecyclerView && type == ViewCompat.TYPE_TOUCH){
-            if (dy>0){
-                if (scrollY <0 ){
-                    scrollBy(0,dy)
-                    consumed[1] = dy
-                }else{
-                    consumed[1] = 0
-                }
 
-            }else{
-                dragUp = !target.canScrollVertically(-1)
+        if ((dragUp && scrollY > 0) or (dragDown && scrollY <0)){
+            scrollBy(0, dy)
+            consumed[1] = dy
+            return
+        }
+        if (target is RecyclerView && type == ViewCompat.TYPE_TOUCH) {
+            dragDown = !target.canScrollVertically(1)
+            dragUp = !target.canScrollVertically(-1)
+            Log.e("onNestedPreScroll","==dragDown:$dragDown==dragUp:$dragUp")
+            Log.e("onNestedPreScroll","==scrollY:$scrollY==dy:$dy")
 
-            }
 
         }
 
     }
 
     override fun scrollTo(x: Int, y: Int) {
-        val realY = if (abs(y) > range) {
+        val realY = if (y < 0 && abs(y) > range) {
             -range
+        } else if (y > 0 && abs(y) > range) {
+            range
         } else {
             y
         }
+
         super.scrollTo(x, realY)
     }
 
@@ -173,10 +192,10 @@ class RefreshRecyclerView : FrameLayout, NestedScrollingParent2 {
             duration = MAX_OFFSET_ANIMATION_DURATION
             addUpdateListener {
                 val position = (finalY * (1 - animatedFraction)).toInt()
-                if (animatedFraction == 1f){
-                    scrollTo(0,0)
+                if (animatedFraction == 1f) {
+                    scrollTo(0, 0)
                     cancel()
-                }else{
+                } else {
                     scrollTo(0, position)
 
                 }
