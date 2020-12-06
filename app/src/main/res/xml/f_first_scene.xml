@@ -2,16 +2,16 @@
 <MotionScene xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <ConstraintSet android:id="@+id/start">
-        <Constraint android:id="@id/appBar" />
-        <Constraint android:id="@id/nestedScrollView"/>
+<!--    <ConstraintSet android:id="@+id/start">-->
+<!--        <Constraint android:id="@id/appBar" />-->
+<!--        <Constraint android:id="@id/nestedScrollView"/>-->
 
-    </ConstraintSet>
+<!--    </ConstraintSet>-->
 
-    <ConstraintSet android:id="@+id/end">
-    </ConstraintSet>
+<!--    <ConstraintSet android:id="@+id/end">-->
+<!--    </ConstraintSet>-->
 
-    <Transition
-        app:constraintSetEnd="@id/end"
-        app:constraintSetStart="@+id/start" />
+<!--    <Transition-->
+<!--        app:constraintSetEnd="@id/end"-->
+<!--        app:constraintSetStart="@+id/start" />-->
 </MotionScene>

@@ -11,6 +11,8 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
 import com.google.android.material.appbar.AppBarLayout
+import com.google.android.material.appbar.MaterialToolbar
+import com.google.android.material.circularreveal.coordinatorlayout.CircularRevealCoordinatorLayout
 import com.xhh.ui.R
 
 /**
@@ -36,8 +38,10 @@ abstract class DataBindingFragment<T:ViewDataBinding>: CoreFragment() {
 
         return when (fragmentStyle) {
             COORDINATOR -> {
+
                 val mCoordinatorLayout = inflater.inflate(R.layout.f_coordinator, container, false) as CoordinatorLayout
                 val mDataBinding = DataBindingUtil.inflate<ViewDataBinding>(inflater, layoutId, mCoordinatorLayout, false)
+                mDataBinding.lifecycleOwner = this
                 onDataBindingCreated(mDataBinding)
                 mCoordinatorLayout.addView(mDataBinding.root,CoordinatorLayout.LayoutParams(-1,1).apply {
                     behavior = AppBarLayout.ScrollingViewBehavior()

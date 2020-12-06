@@ -1,9 +1,21 @@
 package com.xhh.ui
 
+import android.content.Intent
 import android.os.Bundle
+import android.os.Parcelable
+import android.util.Log
+import android.view.Gravity
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
+import androidx.fragment.app.commit
+import androidx.fragment.app.commitNow
+import androidx.transition.Slide
+import androidx.transition.Transition
+import androidx.transition.TransitionInflater
+import com.xhh.ui.fragment.CoreFragment
 import com.xhh.ui.result.ResultCaller
+import java.io.Serializable
 
 /**
  *   @Author:小灰灰
@@ -12,7 +24,6 @@ import com.xhh.ui.result.ResultCaller
  */
 abstract class ModuleHostActivity: AppCompatActivity() {
 
-    private lateinit var mCurrentFragment: Fragment
     private lateinit var mHomeFragment:Fragment
     private lateinit var mResultCaller: ResultCaller
 
@@ -22,72 +33,66 @@ abstract class ModuleHostActivity: AppCompatActivity() {
         }
         return mResultCaller
     }
-//    abstract fun onCreateFragment(tag:String):Fragment
-//    abstract fun onCreateHomeFragment(intent:Intent):Fragment
+
+    abstract fun onCreateHostFragment(intent: Intent):Fragment
+    abstract fun onCreateFragments(tag:String):Fragment
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-//        mHomeFragment = onCreateHomeFragment(intent)
-//        supportFragmentManager.commit {
-//            add(android.R.id.content,mHomeFragment)
-//
-//        }
-//        supportFragmentManager.registerFragmentLifecycleCallbacks(object :FragmentManager.FragmentLifecycleCallbacks(){
-//            override fun onFragmentResumed(fm: FragmentManager, f: Fragment) {
-//                super.onFragmentResumed(fm, f)
-//                mCurrentFragment = f
-//            }
-//
-//            override fun onFragmentDestroyed(fm: FragmentManager, f: Fragment) {
-//                supportFragmentManager.commit {
-//                    remove(f)
-//                }
-//                super.onFragmentDestroyed(fm, f)
-//            }
-//        },false)
+        mHomeFragment = onCreateHostFragment(intent)
+        supportFragmentManager.commit {
+            replace(android.R.id.content,mHomeFragment)
+        }
+        supportFragmentManager.registerFragmentLifecycleCallbacks(object :FragmentManager.FragmentLifecycleCallbacks(){
+
+            override fun onFragmentDestroyed(fm: FragmentManager, f: Fragment) {
+                super.onFragmentDestroyed(fm, f)
+                if (f != mHomeFragment && !f.isRemoving){
+                    supportFragmentManager.commitNow {
+                        remove(f)
+                    }
+                }
+            }
+        },true)
 
     }
 
-//    fun startFragment(tag: String, vararg params:Pair<String,Any>){
-//        if (tag == mCurrentFragment.tag){
-//            return
-//        }
-//        val fragment = onCreateFragment(tag)
-//        if (!params.isNullOrEmpty()) {
-//            fragment.arguments = Bundle().apply {
-//                params.forEach {
-//                    val key = it.first
-//                    when (val value = it.second) {
-//                        is String -> putString(key, value)
-//                        is Parcelable -> putParcelable(key, value)
-//                        is Serializable-> putSerializable(key,value)
-//                        is Int -> putInt(key, value)
-//                        is Boolean -> putBoolean(key, value)
-//                    }
-//                }
-//            }
-//        }
-//        supportFragmentManager.commit {
-//            fragment.enterTransition = Slide(Gravity.RIGHT)
-//            //fragment.exitTransition = Slide(Gravity.LEFT)
-//            mCurrentFragment.exitTransition =Slide(Gravity.RIGHT)
-////            mCurrentFragment.enterTransition = Slide(Gravity.LEFT)
-//            add(android.R.id.content,fragment)
-//            hide(mCurrentFragment)
-//            show(fragment)
-//            setReorderingAllowed(true)
-//            addToBackStack(tag)
-//
-//        }
-//    }
+    fun navigate(tag: String, vararg params:Pair<String,Any>){
+        val fragment = onCreateFragments(tag)
+        if (!params.isNullOrEmpty()) {
+            fragment.arguments = Bundle().apply {
+                params.forEach {
+                    val key = it.first
+                    when (val value = it.second) {
+                        is String -> putString(key, value)
+                        is Parcelable -> putParcelable(key, value)
+                        is Serializable-> putSerializable(key,value)
+                        is Int -> putInt(key, value)
+                        is Boolean -> putBoolean(key, value)
+                    }
+                }
+            }
+        }
+        val currentFragment = supportFragmentManager.fragments.findLast {
+            it is CoreFragment
+        } as Fragment
+        supportFragmentManager.commit {
+            add(android.R.id.content,fragment)
+            hide(currentFragment)
+            show(fragment)
+            setReorderingAllowed(true)
+            addToBackStack(tag)
 
-//    override fun onBackPressed() {
-//        if (mCurrentFragment == mHomeFragment){
-//            finish()
-//        }else{
-//            super.onBackPressed()
-//        }
-//
-//    }
+        }
+    }
+
+    override fun onBackPressed() {
+        if (supportFragmentManager.fragments.size == 1){
+            finish()
+        }else{
+            super.onBackPressed()
+        }
+
+    }
 
 
 }

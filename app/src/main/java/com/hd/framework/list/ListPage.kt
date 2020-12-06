@@ -23,7 +23,7 @@ import kotlinx.coroutines.*
  *   @Time:2020/11/15
  *   @Desc:
  */
-class ListPage:ModuleHostActivity() {
+class ListPage:AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.page_list)

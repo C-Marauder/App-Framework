@@ -1,43 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:background="#fafafa">
-<com.google.android.material.textview.MaterialTextView
-    android:id="@+id/messageView"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:textColor="@android:color/background_dark"
-    android:textSize="16sp"
-    android:gravity="center"
-    android:padding="16dp"
-    app:layout_constraintTop_toTopOf="parent"
-    app:layout_constraintStart_toStartOf="parent"
-    android:background="@android:color/background_light"
-    />
-    <com.google.android.material.textview.MaterialTextView
-        android:id="@+id/negativeView"
-        android:layout_width="0dp"
-        android:layout_height="48dp"
-        app:layout_constraintTop_toBottomOf="@id/messageView"
-        app:layout_constraintStart_toStartOf="parent"
-        android:gravity="center"
-        app:layout_constraintWidth_percent="0.498"
-        android:background="@android:color/background_light"
-        android:text="取消"
-        android:layout_marginTop="1dp"
-        />
-    <com.google.android.material.textview.MaterialTextView
-        android:id="@+id/positiveView"
-        android:layout_width="0dp"
-        android:layout_height="48dp"
-        app:layout_constraintTop_toTopOf="@id/negativeView"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:gravity="center"
-        app:layout_constraintWidth_percent="0.498"
-        android:background="@android:color/background_light"
-        android:text="确定"
-        />
+<layout>
+    <data>
+        <variable
+            name="listener"
+            type="com.xhh.ui.fragment.DialogListener"/>
+    </data>
+    <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        >
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/messageView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/background_dark"
+            android:textSize="16sp"
+            android:gravity="center"
+            android:padding="16dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            android:background="@android:color/background_light"
+            />
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/negativeView"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            app:layout_constraintTop_toBottomOf="@id/messageView"
+            app:layout_constraintStart_toStartOf="parent"
+            android:gravity="center"
+            app:layout_constraintWidth_percent="0.498"
+            android:background="?attr/selectableItemBackground"
+            android:text="取消"
+            android:layout_marginTop="1dp"
+            android:onClick="@{()->listener.dismiss()}"
+            />
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/positiveView"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            app:layout_constraintTop_toTopOf="@id/negativeView"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:gravity="center"
+            app:layout_constraintWidth_percent="0.498"
+            android:background="?attr/selectableItemBackground"
+            android:onClick="@{()->listener.positive()}"
+            android:text="确定"
+            />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>
