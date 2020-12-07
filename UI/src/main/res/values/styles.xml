@@ -10,4 +10,11 @@
         <item name="android:gradientRadius">8dp</item>
         <item name="android:dialogCornerRadius" tools:targetApi="p">8dp</item>
     </style>
+    <style name="AppInputStyle" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="hintTextColor">@color/c_hint_text_color</item>
+        <item name="android:paddingBottom">8dp</item>
+        <item name="boxStrokeColor">@color/c_input_box</item>
+        <item name="boxStrokeErrorColor">#FF7043</item>
+        <item name="boxStrokeWidth">1dp</item>
+    </style>
 </resources>

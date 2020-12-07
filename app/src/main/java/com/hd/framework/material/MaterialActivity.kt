@@ -14,6 +14,7 @@ import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.commit
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.ListAdapter
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.dialog.MaterialDialogs
@@ -30,6 +31,7 @@ import com.xhh.ui.fragment.DataBindingFragment
 import com.xhh.ui.fragment.DialogListener
 import com.xhh.ui.utils.dp
 import kotlinx.android.synthetic.main.activity_material.*
+import kotlinx.coroutines.launch
 
 
 /**
@@ -52,6 +54,14 @@ class MaterialActivity : ModuleHostActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        lifecycleScope.launchWhenCreated {
+            AppHelper.saveConfigs("2" to "2222","44444" to  1)
+        }
+
+        lifecycleScope.launch {
+            val value = AppHelper.getConfig("2" , "")
+            Log.e("==","==$value")
+        }
         //setContentView(R.layout.activity_material)
 
 

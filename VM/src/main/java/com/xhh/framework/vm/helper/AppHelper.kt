@@ -48,9 +48,15 @@ object AppHelper {
     internal fun init(application: Application) {
         this.application = application
         val masterKey = MasterKey.Builder(application, MasterKey.DEFAULT_MASTER_KEY_ALIAS)
-                .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-                .build()
-        encryptedSharedPreferences = EncryptedSharedPreferences.create(application, "app_encryred_config", masterKey, EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV, EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM)
+            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+            .build()
+        encryptedSharedPreferences = EncryptedSharedPreferences.create(
+            application,
+            "app_encryred_config",
+            masterKey,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
         mPackageInfo = application.packageManager.getPackageInfo(application.packageName, 0)
         mAppNetworkObserver = AppNetworkObserver(application)
     }
@@ -60,23 +66,35 @@ object AppHelper {
             dataStore.edit { settings ->
                 configs.forEach {
                     val key = it.first
-                    val preferencesKey = preferencesKey<Any>(key)
-                    settings[preferencesKey] = it.second
+                    when (val value = it.second) {
+                        is Int -> settings[preferencesKey<Int>(key)] = value
+                        is String -> settings[preferencesKey<String>(key)] = value
+                        is Boolean -> settings[preferencesKey<Boolean>(key)] = value
+                        is Float -> settings[preferencesKey<Float>(key)] = value
+                        is Long -> settings[preferencesKey<Long>(key)] = value
+                        is Double -> settings[preferencesKey<Double>(key)] = value
+                        else -> throw Exception("")
+                    }
                 }
             }
         }
     }
 
     @Suppress("UNCHECKED_CAST")
-    suspend fun <T> getConfig(key: String): T ?{
-       val value =dataStore.data.map {
-            preferences -> preferences[preferencesKey(key)]
-        }.first()
-        return if (value == null){
-            null
-        }else{
-            value as T
-        }
+    suspend fun <T> getConfig(key: String,defaultValue:T): T {
+        return dataStore.data.map { preferences ->
+            val preferencesKey = when (defaultValue) {
+                is Int -> preferencesKey<Int>(key)
+                is String -> preferencesKey<String>(key)
+                is Float -> preferencesKey<Float>(key)
+                is Long -> preferencesKey<Long>(key)
+                is Double -> preferencesKey<Double>(key)
+                is Boolean -> preferencesKey<Boolean>(key)
+                else -> throw Exception("")
+            }
+            preferences[preferencesKey] ?: defaultValue
+        }.first() as T
+
     }
 
     fun write(vararg params: Pair<String, Any>) {

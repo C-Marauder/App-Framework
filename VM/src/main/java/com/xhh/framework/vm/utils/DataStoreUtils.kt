@@ -15,33 +15,5 @@ import kotlinx.coroutines.launch
  *   @Desc:
  */
 
-inline fun <reified T : LifecycleCoroutineScope> T.saveConfig(vararg params: Pair<String, Any>) {
-    if (params.isNotEmpty()) {
-        launch {
-            params.forEach {pair->
-                AppHelper.dataStore.edit {
-                    it[preferencesKey(pair.first)] = pair.second
-                }
-            }
-        }
-    }
 
 
-}
-
-
- inline fun <reified T:LifecycleCoroutineScope,reified E> T.readConfig(key:String,noinline onResult:(value:E?)->Unit){
-    launch {
-        val value = AppHelper.dataStore.data.map {
-            it[preferencesKey(key)]
-        }.first()
-        val realValue = if (value!=null){
-            value as E
-        }else{
-            null
-        }
-        onResult(realValue)
-
-    }
-
-}
